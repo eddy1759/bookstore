@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eddy Book Store</title>
+    <link rel="stylesheet" href="css/book.css">
+    <link rel="stylesheet" href="css/header.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Login</a></li>
+                <li><a href="signup.html">Sign Up</a></li>
+                <li id="books-nav" style="display: none;"><a href="books.html">Books</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="bg-img"></div>
+    <h1>Book Store</h1>
+    <table id="books-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+            </tr>
+        </thead>
+        <tbody id="books-list"></tbody>
+    </table>
+
+    <div id="book-details" style="display: none;">
+        <h2>Book Details</h2>
+        <img id="book-image" src="" alt="Book Image">
+        <p id="book-title"></p>
+        <p id="book-author"></p>
+        <p id="book-description"></p>
+        <p id="book-price"></p>
+        <p id="book-isbn"></p>
+        <p id="book-genre"></p>
+        <p id="book-rating"></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+        // Fetch books and display in the table
+            fetchBooks();
+
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('books-nav').style.display = 'block';
+            }
+
+         // Handle clicks on book names
+            document.getElementById('books-list').addEventListener('click', (event) => {
+                if (event.target.classList.contains('book-name')) {
+                    const bookId = event.target.dataset.bookId;
+                    fetchBookDetails(bookId);
+                }
+            });
+
+            // Hide book details when user clicks outside of it
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('#book-details') && document.getElementById('book-details').style.display === 'block') {
+                    document.getElementById('book-details').style.display = 'none';
+                    document.getElementById('books-table').style.display = 'table';
+                }
+            });
+
+            document.getElementById('book-details').addEventListener('click', (event) => {
+                // Prevent the default behavior of the link inside the book details
+                event.preventDefault();
+                
+                // Hide book details and show the table
+                document.getElementById('book-details').style.display = 'none';
+                document.getElementById('books-table').style.display = 'table';
+            });
+        });
+
+        async function fetchBooks() {
+            try {
+                const response = await fetch('http://localhost:3001/api/books', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'), 
+                    }
+                });
+
+                const result = await response.json();
+                if (response.ok && result.status) {
+                    displayBooks(result.books);
+                } else {
+                    console.error('Error fetching books:', result.message);
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+            }
+        }
+
+        function displayBooks(books) {
+            const booksList = document.getElementById('books-list');
+            booksList.innerHTML = '';
+
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><a href="#" class="book-name" data-book-id="${book._id}">${book.title}</a></td>
+                    <td>${book.author}</td>
+                `;
+                booksList.appendChild(row);
+            });
+        }
+
+        async function fetchBookDetails(bookId) {
+            try {
+                const response = await fetch(`http://localhost:3001/api/books/${bookId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer '+ localStorage.getItem('token'), 
+                    }
+                });
+
+                const result = await response.json();
+                if (response.ok && result.status) {
+                    displayBookDetails(result.book);
+                } else {
+                    console.error('Error fetching book details:', result.message);
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+            }
+        }
+
+        function displayBookDetails(book) {
+            document.getElementById('book-image').src = book.bookImageUrl;
+            document.getElementById('book-title').textContent = `Title: ${book.title}`;
+            document.getElementById('book-author').textContent = `Author: ${book.author}`;
+            document.getElementById('book-description').textContent = `Description: ${book.description}`;
+            document.getElementById('book-price').textContent = `Price: ${book.price}`;
+            document.getElementById('book-isbn').textContent = `ISBN: ${book.isbn}`;
+            document.getElementById('book-genre').textContent = `Genre: ${book.genre}`;
+            document.getElementById('book-rating').textContent = `Rating: ${book.rating}`;
+
+            document.getElementById('book-details').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

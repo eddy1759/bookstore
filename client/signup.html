@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Eddy Store</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/header.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Login</a></li>
+                <li><a href="signup.html">Sign Up</a></li>
+                <li id="books-nav" style="display: none;"><a href="books.html">Books</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="bg-img"></div>
+    <div class="landing-page">
+        <h1>Welcome to Eddy Store</h1>
+        <section id="register-section">
+            <h2>Register</h2>
+            <form id="register-form">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+                <br>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <br>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <br>
+                <button type="submit" onclick="handleFormSubmission(event, 'register-form')">Register</button>
+            </form>
+            <p class="switch-form">Already have an account? <a href="index.html">Log in</a></p>
+        </section>
+    </div>
+    <script>
+        // Function to handle form submission
+        async function handleFormSubmission(event, formId) {
+            event.preventDefault();
+            const form = document.getElementById(formId);
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+                const responseData = await response.json();
+
+                if (response.ok && responseData.status === 'success') {
+                    alert('User created successfully');
+                    // Successful response, you can redirect the user to the book page
+                    window.location.href = 'index.html'; // Replace with your actual book page URL
+                } else if (response.status === 400 && responseData.message === 'User already exists, do log in') {
+                    alert('User already exists');
+                } else {
+                    console.error('Error:', responseData.error);
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

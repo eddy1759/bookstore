@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Eddy Store</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/header.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Login</a></li>
+                <li><a href="signup.html">Sign Up</a></li>
+                <li id="books-nav" style="display: none;"><a href="books.html">Books</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="bg-img"></div>
+    <div class="landing-page">
+        <h1>Welcome to Eddy Store</h1>
+        <section id="login-section">
+            <h2>Login</h2>
+            <form id="login-form">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <br>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <br>
+                <button type="submit" onclick="handleFormSubmission('login-form')">Log In</button>
+                <p class="switch-form">Don't Have an account? <a href="signup.html">Sign up</a></p>
+            </form>
+        </section>
+    </div>
+    <script>
+        // Function to handle form submission
+        function handleFormSubmission(formId) {
+            const form = document.getElementById(formId);
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+
+                try {
+                    const response = await fetch('http://localhost:3001/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    console.log(response);
+
+                    if (response.status === 200) {
+                        const result = await response.json();
+                        const token = result.token;
+
+                        localStorage.setItem('token', token);
+                        // Successful response, you can redirect the user to the book page
+                        window.location.href = 'books.html'; // Replace with your actual book page URL
+                    } else {
+                        // Handle error responses here (e.g., display an error message)
+                        console.error('Error:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Network error:', error);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('books-nav').style.display = 'block';
+            }
+        });
+        
+    </script>
+</body>
+</html>
+
