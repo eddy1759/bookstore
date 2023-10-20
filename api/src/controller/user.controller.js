@@ -12,6 +12,14 @@ const registerUser = async (req, res) => {
             });
         }
 
+        // Check if password is less than 8 characters
+        if (password.length < 6) {
+            return res.status(400).json({ 
+                status: false,
+                message: 'password error' 
+            });
+        }
+
         let user = await User.findOne({ email });
         if (user) {
             return res.status(400).json({ 
