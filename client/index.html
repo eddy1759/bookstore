@@ -56,17 +56,15 @@
                         body: JSON.stringify(data),
                     });
 
-                    console.log(response);
 
                     if (response.status === 200) {
                         const result = await response.json();
                         const token = result.token;
 
                         localStorage.setItem('token', token);
-                        // Successful response, you can redirect the user to the book page
-                        window.location.href = 'books.html'; // Replace with your actual book page URL
+            
+                        window.location.href = 'books.html';
                     } else {
-                        // Handle error responses here (e.g., display an error message)
                         console.error('Error:', response.statusText);
                     }
                 } catch (error) {
