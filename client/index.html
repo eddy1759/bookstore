@@ -48,7 +48,7 @@
                 });
 
                 try {
-                    const response = await fetch('http://localhost:3001/api/auth/login', {
+                    const response = await fetch('http://3.91.236.101:3001/api/auth/login', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -61,7 +61,7 @@
                         const result = await response.json();
                         const token = result.token;
 
-                        localStorage.setItem('token', token);
+                        localStorage.setItem('zpt', token);
             
                         window.location.href = 'books.html';
                     } else {
@@ -74,7 +74,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('zpt');
             if (token) {
                 document.getElementById('books-nav').style.display = 'block';
             }
