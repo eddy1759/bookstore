@@ -48,7 +48,7 @@
                 });
 
                 try {
-                    const response = await fetch('http://localhost:3001/api/auth/login', {
+                    const response = await fetch('http://3.91.236.101:3001/api/auth/login', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -56,17 +56,15 @@
                         body: JSON.stringify(data),
                     });
 
-                    console.log(response);
 
                     if (response.status === 200) {
                         const result = await response.json();
                         const token = result.token;
 
-                        localStorage.setItem('token', token);
-                        // Successful response, you can redirect the user to the book page
-                        window.location.href = 'books.html'; // Replace with your actual book page URL
+                        localStorage.setItem('zpt', token);
+            
+                        window.location.href = 'books.html';
                     } else {
-                        // Handle error responses here (e.g., display an error message)
                         console.error('Error:', response.statusText);
                     }
                 } catch (error) {
@@ -76,7 +74,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('zpt');
             if (token) {
                 document.getElementById('books-nav').style.display = 'block';
             }

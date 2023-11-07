@@ -46,7 +46,7 @@
         // Fetch books and display in the table
             fetchBooks();
 
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('zpt');
             if (token) {
                 document.getElementById('books-nav').style.display = 'block';
             }
@@ -68,10 +68,8 @@
             });
 
             document.getElementById('book-details').addEventListener('click', (event) => {
-                // Prevent the default behavior of the link inside the book details
                 event.preventDefault();
                 
-                // Hide book details and show the table
                 document.getElementById('book-details').style.display = 'none';
                 document.getElementById('books-table').style.display = 'table';
             });
@@ -79,10 +77,10 @@
 
         async function fetchBooks() {
             try {
-                const response = await fetch('http://localhost:3001/api/books', {
+                const response = await fetch('http://3.91.236.101:3001/api/books', {
                     method: 'GET',
                     headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('token'), 
+                        'Authorization': 'Bearer ' + localStorage.getItem('zpt'), 
                     }
                 });
 
@@ -113,10 +111,10 @@
 
         async function fetchBookDetails(bookId) {
             try {
-                const response = await fetch(`http://localhost:3001/api/books/${bookId}`, {
+                const response = await fetch(`http://3.91.236.101:3001/api/books/${bookId}`, {
                     method: 'GET',
                     headers: {
-                        'Authorization': 'Bearer '+ localStorage.getItem('token'), 
+                        'Authorization': 'Bearer '+ localStorage.getItem('zpt'), 
                     }
                 });
 
