@@ -30,57 +30,12 @@
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
                 <br>
-                <button type="submit" onclick="handleFormSubmission('login-form')">Log In</button>
+                <button type="submit" id="login-button">Log In</button>
                 <p class="switch-form">Don't Have an account? <a href="signup.html">Sign up</a></p>
             </form>
         </section>
     </div>
-    <script>
-        // Function to handle form submission
-        function handleFormSubmission(formId) {
-            const form = document.getElementById(formId);
-            form.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                const formData = new FormData(form);
-                const data = {};
-                formData.forEach((value, key) => {
-                    data[key] = value;
-                });
-
-                try {
-                    const response = await fetch('http://3.91.236.101:3001/api/auth/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data),
-                    });
-
-
-                    if (response.status === 200) {
-                        const result = await response.json();
-                        const token = result.token;
-
-                        localStorage.setItem('zpt', token);
-            
-                        window.location.href = 'books.html';
-                    } else {
-                        console.error('Error:', response.statusText);
-                    }
-                } catch (error) {
-                    console.error('Network error:', error);
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('zpt');
-            if (token) {
-                document.getElementById('books-nav').style.display = 'block';
-            }
-        });
-        
-    </script>
+    <script src="js/login.js" defer> </script>
 </body>
 </html>
 
