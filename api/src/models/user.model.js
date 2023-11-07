@@ -22,6 +22,10 @@ const userSchema = new Schema({
         enum: ['admin', 'user'],
         default: 'user'
     },
+    is_verified: {
+        type: Boolean,
+        default: false
+    },
     created_at: {
         type: Date,
         default: Date.now 
