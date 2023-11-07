@@ -7,8 +7,10 @@ async function handleFormSubmission(event) {
     data[key] = value;
   });
 
+  // const BASE_URL = 'http://3.91.236.101:3001'| 'http://localhost:3001';
+
   try {
-    const response = await fetch('http://3.91.236.101:3001/api/auth/signup', {
+    const response = await fetch('http://localhost:3001/api/auth/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

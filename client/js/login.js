@@ -7,9 +7,9 @@ async function handleFormSubmission(event) {
   formData.forEach((value, key) => {
     data[key] = value;
   });
-
+  // const BASE_URL = 'http://3.91.236.101:3001'| 'http://localhost:3001';
   try {
-    const response = await fetch('http://3.91.236.101:3001/api/auth/login', {
+    const response = await fetch('http://localhost:3001/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
