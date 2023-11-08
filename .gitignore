@@ -1,2 +1,4 @@
 nohup.out
 /api/.env
+bookstore-server.pem
+.gitignore

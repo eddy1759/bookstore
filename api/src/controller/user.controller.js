@@ -1,7 +1,7 @@
 const User = require('../models/user.model');
 const httpStatus = require('http-status');
 const { generateAuthToken, generateOtpCode } = require('../utils/auth');
-const { sendOtpCodeToUserMail } = require('../utils/email');
+const { sentOtpCodeToUserMail } = require('../config/emailConfig');
 
 const registerUser = async (req, res) => {
     try {
@@ -87,7 +87,7 @@ const loginUser = async (req, res) => {
         user.otp = otpCode;
         await user.save();
 
-        await sendOtpCodeToUserMail(user, otpCode);
+        await sentOtpCodeToUserMail(user, otpCode);
 
         return res.status(httpStatus.OK).json({
             status: true,
@@ -129,7 +129,7 @@ const verifyUserWithOtp = async (req, res) => {
             const otpCode = await generateOtpCode();
             user.otp = otpCode;
             await user.save();
-            await sendOtpCodeToUserMail(user, otpCode);
+            await sentOtpCodeToUserMail(user, otpCode);
             return res.status(httpStatus.BAD_REQUEST).json({ 
                 status: false,
                 message: 'OTP code has expired, check your email for another otp code' 

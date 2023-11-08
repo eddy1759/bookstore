@@ -32,11 +32,6 @@ const generateOtpCode = async () => {
     return otpCode;
 }
 
-const sendOtpCodeToUserMail = async (user, otpCode) => {
-    // send otp code to user mail
-    
-}
-
 
 module.exports = {
     generateAuthToken,

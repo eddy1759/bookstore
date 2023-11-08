@@ -10,11 +10,11 @@ const config = {
     jwtSecret: process.env.JWT_SECRET,
     email: {
         smtp: {
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
+            host: process.env.EMAIL_HOST,
+            port: process.env.EMAIL_PORT,
             auth: {
-                user: process.env.SMTP_USERNAME,
-                pass: process.env.SMTP_PASSWORD,
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
             },
         }, 
     },
