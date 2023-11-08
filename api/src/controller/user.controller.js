@@ -1,12 +1,14 @@
 const User = require('../models/user.model');
-const { generateAuthToken } = require('../utils/auth');
+const httpStatus = require('http-status');
+const { generateAuthToken, generateOtpCode } = require('../utils/auth');
+const { sendOtpCodeToUserMail } = require('../utils/email');
 
 const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ 
+            return res.status(httpStatus.BAD_REQUEST).json({ 
                 status: false,
                 message: 'Required fields missing' 
             });
@@ -14,7 +16,7 @@ const registerUser = async (req, res) => {
 
         // Check if password is less than 8 characters
         if (password.length < 6) {
-            return res.status(400).json({ 
+            return res.status(httpStatus.BAD_REQUEST).json({ 
                 status: false,
                 message: 'password error' 
             });
@@ -22,7 +24,7 @@ const registerUser = async (req, res) => {
 
         let user = await User.findOne({ email });
         if (user) {
-            return res.status(400).json({ 
+            return res.status(httpStatus.BAD_REQUEST).json({ 
                 status: false,
                 message: 'User already exists, do log in' 
             });
@@ -38,11 +40,11 @@ const registerUser = async (req, res) => {
         user = new User(userBody);
         await user.save();
 
-        return res.status(201).json({ status: true, message: 'User created successfully' });
+        return res.status(httpStatus.CREATED).json({ status: true, message: 'User created successfully' });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
             status: false,
             message: 'Internal Server Error',
             error: error.message
@@ -50,12 +52,13 @@ const registerUser = async (req, res) => {
     }
 }
 
+
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
       
         if (!email ||!password) {
-            return res.status(400).json({ 
+            return res.status(httpStatus.BAD_REQUEST).json({ 
                 status: false,
                 message: 'Required fields missing' 
             });
@@ -64,7 +67,7 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ email });
         
         if (!user) {
-            return res.status(404).json({ 
+            return res.status(httpStatus.NOT_FOUND).json({ 
                 status: false,
                 message: 'User not found' 
             });
@@ -73,23 +76,28 @@ const loginUser = async (req, res) => {
         const match = await user.comparePassword(password);
 
         if (!match) {
-            return res.status(401).json({ 
+            return res.status(httpStatus.UNAUTHORIZED).json({ 
                 status: false,
                 message: 'Invalid credentials' 
             });
         };
 
         const token = await generateAuthToken(user);
-        
-        return res.status(200).json({
+        const otpCode = await generateOtpCode();
+        user.otp = otpCode;
+        await user.save();
+
+        await sendOtpCodeToUserMail(user, otpCode);
+
+        return res.status(httpStatus.OK).json({
             status: true,
-            message: 'User logged in successfully',
+            message: 'Check your email to verify your account with otp code',
             token
         });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
             status: false,
             message: 'Internal Server Error',
             error: error.message
@@ -97,18 +105,69 @@ const loginUser = async (req, res) => {
     }
 };
 
+const verifyUserWithOtp = async (req, res) => {
+    try {
+        const { otp } = req.body;
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(httpStatus.NOT_FOUND).json({ 
+                status: false,
+                message: 'User not found' 
+            });
+        };
+        
+        if (user.otp!== otp) {
+            return res.status(httpStatus.BAD_REQUEST).json({ 
+                status: false,
+                message: 'Invalid otp' 
+            });
+        };
+        // check if otp has expired and if such send another otp code
+        if (Date.now() > user.otpExpires) {
+            const otpCode = await generateOtpCode();
+            user.otp = otpCode;
+            await user.save();
+            await sendOtpCodeToUserMail(user, otpCode);
+            return res.status(httpStatus.BAD_REQUEST).json({ 
+                status: false,
+                message: 'OTP code has expired, check your email for another otp code' 
+            });
+        };
+
+        if (user.otp === otp) {
+            user.otp = null;
+            user.otpExpires = null;
+            user.isVerified = true;
+            await user.save();
+            return res.status(httpStatus.OK).json({ 
+                status: true,
+                message: 'User verified successfully' 
+            });
+        };
+    } catch (error) {
+        console.error(error);
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+            status: false,
+            message: 'Internal Server Error',
+            error: error.message
+        })
+    }
+}
+
 const getUserById = async (req, res) => {
     try {
   
         const user = await User.findById(req.params.id);
 
         if (!user) {
-            return res.status(404).json({ 
+            return res.status(httpStatus.NOT_FOUND).json({ 
                 status: false,
                 message: 'User not found' 
             });
         }
-        return res.status(200).json({ status: true, 
+        return res.status(httpStatus.OK).json({ status: true, 
             data: {
             user: user
         } });
@@ -127,21 +186,21 @@ const getAllUsers = async (req, res) => {
         const userRole = req.user.role;
 
         if (userRole !== 'admin') {
-            return res.status(401).json({ 
+            return res.status(httpStatus.UNAUTHORIZED).json({ 
                 status: false,
                 message: 'Unauthorized access' 
             });
         }
         const users = await User.find({});
 
-        return res.status(200).json({ status: true, 
+        return res.status(httpStatus.OK).json({ status: true, 
             data: {
             users: users
         } });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
             status: false,
             message: 'Internal Server Error',
             error: error.message
@@ -153,7 +212,7 @@ const updateUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
         if (!user) {
-            return res.status(404).json({ 
+            return res.status(httpStatus.NOT_FOUND).json({ 
                 status: false,
                 message: 'User not found' 
             });
@@ -169,7 +228,7 @@ const updateUser = async (req, res) => {
                 updates.password = password;
     
             } else {
-                return res.status(400).json({ 
+                return res.status(httpStatus.BAD_REQUEST).json({ 
                     status: false,
                     message: 'Required fields missing or password is incorrect' 
                 });
@@ -178,13 +237,13 @@ const updateUser = async (req, res) => {
     
         const updatedUser = await User.findByIdAndUpdate({ _id: req.params.id }, updates, { new: true });
 
-        return res.status(200).json({ status: true, 
+        return res.status(httpStatus.OK).json({ status: true, 
             data: {
             user: updatedUser
         } });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
             status: false,
             message: 'Internal Server Error',
             error: error.message
@@ -203,7 +262,7 @@ const deleteUser = async (req, res) => {
         }
         const user = await User.findById(req.params.id);
         if (!user) {
-            return res.status(404).json({ 
+            return res.status(httpStatus.NOT_FOUND).json({ 
                 status: false,
                 message: 'User not found' 
             });
@@ -212,7 +271,7 @@ const deleteUser = async (req, res) => {
         return res.status(204).json({ status: true, message: 'User deleted successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
             status: false,
             message: 'Internal Server Error',
             error: error.message
@@ -223,6 +282,7 @@ const deleteUser = async (req, res) => {
 module.exports = {
     registerUser,
     loginUser,
+    verifyUserWithOtp,
     getUserById,
     getAllUsers,
     updateUser,

@@ -27,7 +27,19 @@ const verifyToken = async (req, res, next) => {
     }
 }
 
+const generateOtpCode = async () => {
+    const otpCode = Math.floor(Math.random() * 900000) + 10000;
+    return otpCode;
+}
+
+const sendOtpCodeToUserMail = async (user, otpCode) => {
+    // send otp code to user mail
+    
+}
+
+
 module.exports = {
     generateAuthToken,
-    verifyToken
+    verifyToken,
+    generateOtpCode
 }
