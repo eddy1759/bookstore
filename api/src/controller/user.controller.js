@@ -1,6 +1,6 @@
 const User = require('../models/user.model');
 const httpStatus = require('http-status');
-const { generateAuthToken, generateOtpCode } = require('../utils/auth');
+const { generateAuthToken, generateOtpCodeAndSetExpiryDate } = require('../utils/auth');
 const { sentOtpCodeToUserMail } = require('../config/emailConfig');
 
 const registerUser = async (req, res) => {
@@ -18,7 +18,7 @@ const registerUser = async (req, res) => {
         if (password.length < 6) {
             return res.status(httpStatus.BAD_REQUEST).json({ 
                 status: false,
-                message: 'password error' 
+                message: 'Password needs to be at least 6 characters long' 
             });
         }
 
@@ -83,8 +83,9 @@ const loginUser = async (req, res) => {
         };
 
         const token = await generateAuthToken(user);
-        const otpCode = await generateOtpCode();
+        const { otpCode, otpExpires} = generateOtpCodeAndSetExpiryDate();
         user.otp = otpCode;
+        user.otpExpires = otpExpires;
         await user.save();
 
         await sentOtpCodeToUserMail(user, otpCode);
@@ -126,10 +127,14 @@ const verifyUserWithOtp = async (req, res) => {
         };
         // check if otp has expired and if such send another otp code
         if (Date.now() > user.otpExpires) {
-            const otpCode = await generateOtpCode();
+            const { otpCode, otpExpires} = generateOtpCodeAndSetExpiryDate();
             user.otp = otpCode;
+            user.otpExpires = otpExpires;
+
             await user.save();
+
             await sentOtpCodeToUserMail(user, otpCode);
+
             return res.status(httpStatus.BAD_REQUEST).json({ 
                 status: false,
                 message: 'OTP code has expired, check your email for another otp code' 
@@ -223,6 +228,7 @@ const updateUser = async (req, res) => {
 
         if (name) updates.name = name;
         if (email) updates.email = email;
+        if (role) updates.role = req.body.role;
         if (password){
             if (await(user.comparePassword(password))) {
                 updates.password = password;
